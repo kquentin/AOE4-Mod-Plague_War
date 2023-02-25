@@ -1,0 +1,92 @@
+-----------------------------------------------------------------------
+-- Imported Scripts
+-----------------------------------------------------------------------
+
+import("cardinal.scar")
+
+-----------------------------------------------------------------------
+-- Data
+-----------------------------------------------------------------------
+
+_mod = {
+	module = "Mod",
+}
+
+Core_RegisterModule(_mod.module)
+
+-----------------------------------------------------------------------
+-- Scripting framework
+-----------------------------------------------------------------------
+
+MOD_SPAWN_INFECTED_TIMER_NAME = "MOD_SpawnInfectedTimer"
+MOD_SPAWN_INFECTED_TIMER_VALUE = 2700
+MOD_SPAWN_INFECTED_CHECK_FREQUENCY = 1.0
+
+MOD_BP_VILLAGER = "villager"
+
+function Mod_Start()	
+	if not Timer_Exists(MOD_SPAWN_INFECTED_TIMER_NAME) then
+		Timer_Start(MOD_SPAWN_INFECTED_TIMER_NAME, MOD_SPAWN_INFECTED_TIMER_VALUE)
+	end
+	
+	Rule_AddInterval(Mod_OnTimerTick, MOD_SPAWN_INFECTED_CHECK_FREQUENCY)
+end
+
+function Mod_OnTimerTick()
+	local villager_infected = 0
+	
+	local player = Mod_GetRandomAliveHumanPlayer()	
+	local player_civ = Player_GetRaceName(player.id)
+	local player_enemy_id = Player_FindFirstEnemyPlayer(player.id)
+	local player_villager_ebp = BP_GetEntityBlueprint("unit_villager_1_" .. string.sub(player_civ, 1, 3))
+	
+	if player_enemy_id == nil or Timer_GetElapsed(MOD_SPAWN_INFECTED_TIMER_NAME) == MOD_SPAWN_INFECTED_TIMER_VALUE then
+		Rule_RemoveMe()
+		Timer_End(MOD_SPAWN_INFECTED_TIMER_NAME)
+		return
+		
+	elseif Timer_GetRemaining(MOD_SPAWN_INFECTED_TIMER_NAME) == 2690 then -- 10secs
+		Mod_SpreadPlague(player.id, player_enemy_id, MOD_BP_VILLAGER, 2)	
+		
+	elseif Timer_GetRemaining(MOD_SPAWN_INFECTED_TIMER_NAME) == 2640 then -- 60secs
+		Mod_SpreadPlague(player.id, player_enemy_id, MOD_BP_VILLAGER, 4)		
+	end
+end
+
+function Mod_SpreadPlague(player_id, player_enemy_id, unit_type, unit_infected)
+	for i = 1, unit_infected do
+		local target = Mod_GetTargetSquadRandomlyFromPlayer(player_id, unit_type)
+		if target ~= nil then
+			Squad_SetPlayerOwner(target, player_enemy_id)
+		end
+	end
+end
+	
+function Mod_GetRandomAliveHumanPlayer()
+	-- `pairs` already working randomly in LUA
+	for _, player in pairs(PLAYERS) do
+		if Player_IsHuman(player.id) and Player_IsAlive(player.id) then 
+			return player
+		end
+	end
+end
+
+function Mod_GetTargetSquadRandomlyFromPlayer(player_id, unit_type)
+	local count = 0
+	local filtered_squads = {}
+	
+	local sgroup = Player_GetSquadsFromType(player_id, unit_type)
+	for i = 1, SGroup_CountSpawned(sgroup) do
+		local squad = SGroup_GetSquadAt(sgroup, i)
+		if squad ~= nil then
+			table.insert(filtered_squads, squad)
+			count = count + 1
+		end	
+	end
+	
+	if count == 0 then
+		return nil
+	end
+	
+	return filtered_squads[World_GetRand(1, count)]	
+end

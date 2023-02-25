@@ -1,0 +1,28 @@
+<DataWarehouse>
+	<!--plague_war/-->
+	<DataObject Name="plague_war" Type="Mod" Id="16495199856936294630" Version="1">
+		<DataProperty Name="m_description" Type="Object">
+			<DataValue Name="util::ReflectLocString">4814191438487928584</DataValue>
+			<!--plague_war/util::ReflectLocString/-->
+			<DataObject Name="" Type="util::ReflectLocString" Id="4814191438487928584" OwnerId="16495199856936294630">
+				<DataProperty Name="m_modPart2" Type="UInt32" Value="1066214830"/>
+				<DataProperty Name="m_modPart3" Type="UInt32" Value="3361589798"/>
+				<DataProperty Name="m_modPart0" Type="UInt32" Value="2384463132"/>
+				<DataProperty Name="m_modPart1" Type="UInt32" Value="1259643992"/>
+				<DataProperty Name="m_locStringKey" Type="Int32" Value="2"/>
+			</DataObject>
+		</DataProperty>
+		<DataProperty Name="m_name" Type="Object">
+			<DataValue Name="util::ReflectLocString">7536189292519415251</DataValue>
+			<!--plague_war/util::ReflectLocString/-->
+			<DataObject Name="" Type="util::ReflectLocString" Id="7536189292519415251" OwnerId="16495199856936294630">
+				<DataProperty Name="m_modPart2" Type="UInt32" Value="1066214830"/>
+				<DataProperty Name="m_modPart3" Type="UInt32" Value="3361589798"/>
+				<DataProperty Name="m_modPart0" Type="UInt32" Value="2384463132"/>
+				<DataProperty Name="m_modPart1" Type="UInt32" Value="1259643992"/>
+				<DataProperty Name="m_locStringKey" Type="Int32" Value="1"/>
+			</DataObject>
+		</DataProperty>
+	</DataObject>
+</DataWarehouse>
+
