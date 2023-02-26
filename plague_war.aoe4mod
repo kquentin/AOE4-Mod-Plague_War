@@ -2,7 +2,7 @@
 <Mod xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.datacontract.org/2004/07/Essence.Editor.Modding">
 	<DataGenericPath>assets</DataGenericPath>
 	<DataIntermediatePath>cache</DataIntermediatePath>
-	<ID>8e20051c-a458-4b14-ae25-8d3f26ca5dc8</ID>
+	<ID>7976eec7-134b-47b8-a33b-c6419a42d8f2</ID>
 	<LocDBPath>locdb\plague_war.locdb</LocDBPath>
 	<Type>Extension</Type>
 </Mod>

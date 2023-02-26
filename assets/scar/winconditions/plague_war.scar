@@ -4,6 +4,7 @@
 
 import("cardinal.scar")
 
+
 -----------------------------------------------------------------------
 -- Data
 -----------------------------------------------------------------------
@@ -36,19 +37,21 @@ function Mod_OnTimerTick()
 	local player = Mod_GetRandomHumanPlayer()	
 	local player_enemy_id = Player_FindFirstEnemyPlayer(player.id)
 	
-	if player_enemy_id == nil or Timer_GetElapsed(MOD_SPAWN_INFECTED_TIMER_NAME) == MOD_SPAWN_INFECTED_TIMER_VALUE then
+	-- if player_enemy_id == nil or
+	if Timer_GetElapsed(MOD_SPAWN_INFECTED_TIMER_NAME) == MOD_SPAWN_INFECTED_TIMER_VALUE then
 		Rule_RemoveMe()
 		Timer_End(MOD_SPAWN_INFECTED_TIMER_NAME)
 		return
 	end
-	
-	local player_sg_villager = Player_GetSquadsFromType(player.id, MOD_BP_VILLAGER)
-	
-	if Timer_GetRemaining(MOD_SPAWN_INFECTED_TIMER_NAME) == 2690 then -- 10secs
-		Mod_SpreadPlague(player_enemy_id, player_sg_villager, 2)	
+
+	local sgroup_player_villager = Player_GetSquadsFromType(player.id, MOD_BP_VILLAGER)
+	local sgroup_player_infected = SGroup_CreateIfNotFound("sg_infected")
+
+	if Timer_GetRemaining(MOD_SPAWN_INFECTED_TIMER_NAME) == 2695 then -- 5secs
+		Mod_SpreadPlague(player_enemy_id, sgroup_player_villager, sgroup_player_infected, 2)	
 	
 	elseif Timer_GetRemaining(MOD_SPAWN_INFECTED_TIMER_NAME) == 2640 then -- 60secs
-		Mod_SpreadPlague(player_enemy_id, player_sg_villager, 4)		
+		Mod_SpreadPlague(player_enemy_id, sgroup_player_villager, sgroup_player_infected, 4)	
 	end
 end
 
@@ -61,30 +64,21 @@ function Mod_GetRandomHumanPlayer()
 	end
 end
 
-function Mod_SpreadPlague(player_enemy_id, squad_group, unit_infected)
-	for i = 1, unit_infected do
-		local target = Mod_GetRandomFromSquadGroup(squad_group)
-		if target ~= nil then
-			Squad_SetPlayerOwner(target, player_enemy_id)
+function Mod_SpreadPlague(player_enemy_id, sg_healthy, sg_infected, nb_infected)	
+	for i = 1, nb_infected do
+		local random_squad = SGroup_GetRandomSpawnedSquad(sg_healthy)
+		
+		if random_squad == nil then
+			return
 		end
+		
+		SGroup_Add(sg_infected, random_squad)
+		SGroup_Remove(sg_healthy, random_squad)
+
+		local infected_squad = SGroup_GetSpawnedSquadAt(sg_infected, i) -- one-based index
+		local infected_entity = Squad_EntityAt(infected_squad, 0) 		-- zero-based index
+		
+		Entity_ConvertBlueprint(infected_entity, BP_GetEntityBlueprint("unit_infected"))
 	end
 end
 
-function Mod_GetRandomFromSquadGroup(squad_group)
-	local count = 0
-	local filtered_squads = {}
-	
-	for i = 1, SGroup_CountSpawned(squad_group) do
-		local squad = SGroup_GetSquadAt(squad_group, i)
-		if squad ~= nil then
-			table.insert(filtered_squads, squad)
-			count = count + 1
-		end	
-	end
-	
-	if count == 0 then
-		return nil
-	end
-	
-	return filtered_squads[World_GetRand(1, count)]	
-end
