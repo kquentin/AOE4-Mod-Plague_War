@@ -37,8 +37,7 @@ function Mod_OnTimerTick()
 	local player = Mod_GetRandomHumanPlayer()	
 	local player_enemy_id = Player_FindFirstEnemyPlayer(player.id)
 	
-	-- if player_enemy_id == nil or
-	if Timer_GetElapsed(MOD_SPAWN_INFECTED_TIMER_NAME) == MOD_SPAWN_INFECTED_TIMER_VALUE then
+	if player_enemy_id == nil or Timer_GetElapsed(MOD_SPAWN_INFECTED_TIMER_NAME) == MOD_SPAWN_INFECTED_TIMER_VALUE then
 		Rule_RemoveMe()
 		Timer_End(MOD_SPAWN_INFECTED_TIMER_NAME)
 		return
@@ -48,11 +47,13 @@ function Mod_OnTimerTick()
 	local sgroup_player_infected = SGroup_CreateIfNotFound("sg_infected")
 
 	if Timer_GetRemaining(MOD_SPAWN_INFECTED_TIMER_NAME) == 2695 then -- 5secs
-		Mod_SpreadPlague(player_enemy_id, sgroup_player_villager, sgroup_player_infected, 2)	
+		Mod_SpreadPlague(sgroup_player_villager, sgroup_player_infected, 2)	
 	
 	elseif Timer_GetRemaining(MOD_SPAWN_INFECTED_TIMER_NAME) == 2640 then -- 60secs
-		Mod_SpreadPlague(player_enemy_id, sgroup_player_villager, sgroup_player_infected, 4)	
+		Mod_SpreadPlague(sgroup_player_villager, sgroup_player_infected, 4)	
 	end
+	
+	SGroup_SetPlayerOwner(sgroup_player_infected, player_enemy_id)
 end
 
 function Mod_GetRandomHumanPlayer()
@@ -64,7 +65,7 @@ function Mod_GetRandomHumanPlayer()
 	end
 end
 
-function Mod_SpreadPlague(player_enemy_id, sg_healthy, sg_infected, nb_infected)	
+function Mod_SpreadPlague(sg_healthy, sg_infected, nb_infected)	
 	for i = 1, nb_infected do
 		local random_squad = SGroup_GetRandomSpawnedSquad(sg_healthy)
 		
@@ -74,11 +75,11 @@ function Mod_SpreadPlague(player_enemy_id, sg_healthy, sg_infected, nb_infected)
 		
 		SGroup_Add(sg_infected, random_squad)
 		SGroup_Remove(sg_healthy, random_squad)
-
+		
 		local infected_squad = SGroup_GetSpawnedSquadAt(sg_infected, i) -- one-based index
 		local infected_entity = Squad_EntityAt(infected_squad, 0) 		-- zero-based index
 		
-		Entity_ConvertBlueprint(infected_entity, BP_GetEntityBlueprint("unit_infected"))
+		Entity_ConvertBlueprint(infected_entity, BP_GetEntityBlueprint("0b5644d50fa74a048f83407a70ad4e93:unit_infected_abb"))
 	end
 end
 
