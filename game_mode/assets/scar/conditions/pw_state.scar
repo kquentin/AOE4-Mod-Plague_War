@@ -1,0 +1,93 @@
+PW_STATE_MODULE = "PW_State"
+
+-----------------------------
+-- Delegates:
+-----------------------------
+
+Core_RegisterModule(PW_STATE_MODULE)	
+
+-----------------------------
+-- Functions:
+-----------------------------
+
+function PW_State_OnStart()
+	print("PW_State_OnStart")
+	Rule_AddInterval(PW_State_OnTimerTick, 1.0)
+	Rule_AddGlobalEvent(PW_State_OnDamageReceived, GE_DamageReceived)
+end
+
+function PW_State_OnTimerTick()		
+	print(PW_GLOBAL_SETTINGS.Difficulty.Count)
+	print(PW_GLOBAL_SETTINGS.Difficulty.Value)
+	print(PW_GLOBAL_SETTINGS.Difficulty.Increment)
+	
+	local player = PW_GetRandomHumanPlayer()	
+	local player_enemy_id = Player_FindFirstEnemyPlayer(player.id)
+	local player_sgroup_villager = Player_GetSquadsFromType(player.id, PW_BLUEPRINT_VILLAGER)
+	
+	if player_enemy_id == nil or SGroup_CountSpawned(player_sgroup_villager) == 0 then
+		if SGroup_CountSpawned(player_sgroup_villager) == 0 then
+			-- TODO: Game over
+		end
+	
+		Rule_RemoveAll()
+		return
+	end
+
+	if World_GetGameTime() == PW_GLOBAL_SETTINGS.Difficulty.Value then
+
+		local count = PW_GLOBAL_SETTINGS.Difficulty.Count
+		if SGroup_CountSpawned(player_sgroup_villager) < PW_GLOBAL_SETTINGS.Difficulty.Count then
+			count = SGroup_CountSpawned(player_sgroup_villager)
+		end 
+		
+		for i = 1, count do
+			local squad = SGroup_GetRandomSpawnedSquad(player_sgroup_villager)				
+			if squad ~= nil and type(squad) ~= "number" then		
+				PW_State_InfectSquad(
+					player_sgroup_villager,
+					squad,
+					PW_ENTITY_TABLE[Squad_GetRace(squad)]["infected"],
+					player_enemy_id
+				)
+			end
+		end
+		
+		PW_GLOBAL_SETTINGS.Difficulty.Count = PW_GLOBAL_SETTINGS.Difficulty.Count + PW_GLOBAL_SETTINGS.Difficulty.Increment	
+		PW_GLOBAL_SETTINGS.Difficulty.Value = PW_GLOBAL_SETTINGS.Difficulty.Value + World_GetRand(math.floor(PW_GLOBAL_SETTINGS.Difficulty.Value / 2), PW_GLOBAL_SETTINGS.Difficulty.Value)
+	end
+end
+
+function PW_State_OnDamageReceived(context)	
+	if context == nil 
+		or context.victimOwner == nil
+		or context.victimSquad == nil
+		or context.attackerOwner == nil
+		or context.isRepairing == nil then
+		return
+	end
+
+	local victim_owner = Core_GetPlayersTableEntry(context.victimOwner)
+	local attacker_owner = Core_GetPlayersTableEntry(context.attackerOwner)
+
+	if victim_owner == nil or attacker_owner == nil or context.isRepairing then
+		return
+	end
+
+	if AI_IsAIPlayer(victim_owner.id) or not Squad_IsOfType(context.victimSquad, PW_BLUEPRINT_VILLAGER) then	
+		return
+	end
+
+	PW_State_InfectSquad(
+		Player_GetSquadsFromType(victim_owner.id, PW_BLUEPRINT_VILLAGER),
+		context.victimSquad,
+		PW_ENTITY_TABLE[Squad_GetRace(context.victimSquad)]["infected"],
+		attacker_owner.id
+	)
+end
+
+function PW_State_InfectSquad(sgroup, squad, ebp, player_id)
+	SGroup_Remove(sgroup, squad)
+	PW_SwapSquadBlueprint(Squad_EntityAt(squad, 0), ebp)
+	Squad_SetPlayerOwner(squad, player_id)
+end

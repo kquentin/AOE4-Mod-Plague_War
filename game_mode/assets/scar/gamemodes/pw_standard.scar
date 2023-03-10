@@ -1,0 +1,18 @@
+PW_STANDARD_MODULE = "PW_Standard"
+
+-----------------------------
+-- Imports
+-----------------------------
+
+import("pw_cardinal.scar")
+
+---------------------------------------------------------------------------------------------------
+-- Delegates:
+---------------------------------------------------------------------------------------------------
+
+Core_RegisterModule(PW_STANDARD_MODULE)	
+
+function PW_Standard_PrepareStart()
+	print("PW_Standard_PrepareStart")
+	FOW_RevealAll()
+end
